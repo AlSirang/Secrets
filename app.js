@@ -75,13 +75,46 @@ app.get('/auth/google/secrets',
     function (req, res) {
         res.redirect('/secrets');
     });
-app.get('/secrets', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.render("secrets");
-    } else {
-        res.redirect("/login");
-    }
+
+app.get("/secrets", (req, res) => {
+    User.find({},
+        (err, result) => {
+            if (!err) {
+                if (result.length > 0) {
+                    if (req.isAuthenticated()) {
+                        res.render("secrets", {
+                            secrets: result, display: ""
+                        });
+                    } else {
+                        res.render("secrets", { secrets: result, display: "hidden" });
+                    }
+                }
+            } else {
+                console.log(err);
+            }
+        });
+
 });
+app.route("/submit")
+    .get((req, res) => {
+        if (req.isAuthenticated()) {
+            res.render("submit");
+        } else {
+            res.redirect("/login");
+        }
+    })
+    .post((req, res) => {
+        const secret = req.body.secret;
+        User.findOneAndUpdate({ _id: req.user.id }, { $set: { secret: secret } },
+            (err, result) => {
+                if (!err) {
+                    res.redirect("/secrets");
+                } else {
+                    res.render("/submit");
+                    console.log(result);
+                }
+            });
+    });
 
 
 // facebook auth
@@ -164,9 +197,14 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-mongoose.set("useCreateIndex", true);
-mongoose.connect("mongodb://localhost:27017/usersDB",
-    { useNewUrlParser: true, useUnifiedTopology: true },
+const uri = "mongodb://localhost:27017/usersDB";
+const configs = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
+};
+mongoose.connect(uri, configs,
     (err) => {
         if (!err) {
             console.log("Connected to DB Successfully.");
