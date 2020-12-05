@@ -80,14 +80,10 @@ app.get("/secrets", (req, res) => {
     User.find({},
         (err, result) => {
             if (!err) {
-                if (result.length > 0) {
-                    if (req.isAuthenticated()) {
-                        res.render("secrets", {
-                            secrets: result, display: ""
-                        });
-                    } else {
-                        res.render("secrets", { secrets: result, display: "hidden" });
-                    }
+                if (req.isAuthenticated()) {
+                    res.render("secrets", {secrets: result, display: ""});
+                } else {
+                    res.render("secrets", { secrets: result, display: "hidden" });
                 }
             } else {
                 console.log(err);
@@ -134,7 +130,6 @@ app.route("/register").
         res.render("register", { Msg: " " });
     })
     .post((req, res) => {
-
         const username = req.body.username,
             password = req.body.password;
         if (username && password) {
